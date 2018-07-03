@@ -37,6 +37,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.ImageView;
+
 import java.io.File;
 import java.io.OutputStream;
 import java.lang.annotation.Retention;
@@ -57,9 +58,15 @@ public class CropView extends ImageView {
     private Matrix transform = new Matrix();
     private Extensions extensions;
 
-    /** Corresponds to the values in {@link com.lyft.android.scissors2.R.attr#cropviewShape} */
+    public void zoomToPosition(float toX, float toY, float toScale) {
+        touchManager.zoomToPosition(toX, toY, toScale);
+    }
+
+    /**
+     * Corresponds to the values in {@link com.lyft.android.scissors2.R.attr#cropviewShape}
+     */
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ Shape.RECTANGLE, Shape.OVAL })
+    @IntDef({Shape.RECTANGLE, Shape.OVAL})
     public @interface Shape {
 
         int RECTANGLE = 0;
@@ -93,6 +100,7 @@ public class CropView extends ImageView {
 
         // We need anti-aliased Paint to smooth the curved edges
         viewportPaint.setFlags(viewportPaint.getFlags() | Paint.ANTI_ALIAS_FLAG);
+
     }
 
     @Override
@@ -117,6 +125,7 @@ public class CropView extends ImageView {
 
         canvas.drawBitmap(bitmap, transform, bitmapPaint);
     }
+
 
     private void drawSquareOverlay(Canvas canvas) {
         final int viewportWidth = touchManager.getViewportWidth();
@@ -425,7 +434,7 @@ public class CropView extends ImageView {
 
         /**
          * Load a {@link Bitmap} using a reference to a {@link BitmapLoader}, you must call {@link LoadRequest#load(Object)} afterwards.
-         *
+         * <p>
          * Please ensure that the library for the {@link BitmapLoader} you reference is available on the classpath.
          *
          * @param loaderType the {@link BitmapLoader} to use to load desired (@link Bitmap}

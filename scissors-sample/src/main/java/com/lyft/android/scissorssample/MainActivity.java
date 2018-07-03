@@ -28,14 +28,17 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
+
+import com.lyft.android.scissors2.CropView;
+import com.squareup.leakcanary.RefWatcher;
+
+import java.io.File;
+import java.util.List;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTouch;
-import com.lyft.android.scissors2.CropView;
-import com.squareup.leakcanary.RefWatcher;
-import java.io.File;
-import java.util.List;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.subscriptions.CompositeSubscription;
@@ -46,14 +49,14 @@ import static rx.schedulers.Schedulers.io;
 
 public class MainActivity extends Activity {
 
-    private static final float[] ASPECT_RATIOS = { 0f, 1f, 6f/4f, 16f/9f };
+    private static final float[] ASPECT_RATIOS = {0f, 1f, 6f / 4f, 16f / 9f};
 
-    private static final String[] ASPECT_LABELS = { "\u00D8", "1:1", "6:4", "16:9" };
+    private static final String[] ASPECT_LABELS = {"\u00D8", "1:1", "6:4", "16:9"};
 
     @Bind(R.id.crop_view)
     CropView cropView;
 
-    @Bind({ R.id.crop_fab, R.id.pick_mini_fab, R.id.ratio_fab })
+    @Bind({R.id.crop_fab, R.id.pick_mini_fab, R.id.ratio_fab})
     List<View> buttons;
 
     @Bind(R.id.pick_fab)
@@ -103,6 +106,8 @@ public class MainActivity extends Activity {
             cropView.extensions()
                     .load(galleryPictureUri);
 
+            cropView.zoomToPosition(10f, 1f, 1.2f);
+
             updateButtons();
         }
     }
@@ -128,7 +133,7 @@ public class MainActivity extends Activity {
                 }));
     }
 
-    @OnClick({ R.id.pick_fab, R.id.pick_mini_fab })
+    @OnClick({R.id.pick_fab, R.id.pick_mini_fab})
     public void onPickClicked() {
         cropView.extensions()
                 .pickUsing(this, RequestCodes.PICK_IMAGE_FROM_GALLERY);

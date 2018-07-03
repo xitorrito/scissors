@@ -65,15 +65,13 @@ class TouchManager {
     private final GestureAnimator gestureAnimator = new GestureAnimator(new GestureAnimator.OnAnimationUpdateListener() {
         @Override
         public void onAnimationUpdate(@GestureAnimator.AnimationType int animationType, float animationValue) {
-            if(animationType == GestureAnimator.ANIMATION_X) {
+            if (animationType == GestureAnimator.ANIMATION_X) {
                 position.set(animationValue, position.getY());
                 ensureInsideViewport();
-            }
-            else if(animationType == GestureAnimator.ANIMATION_Y) {
+            } else if (animationType == GestureAnimator.ANIMATION_Y) {
                 position.set(position.getX(), animationValue);
                 ensureInsideViewport();
-            }
-            else if(animationType == GestureAnimator.ANIMATION_SCALE) {
+            } else if (animationType == GestureAnimator.ANIMATION_SCALE) {
                 scale = animationValue;
                 setLimits();
             }
@@ -95,8 +93,14 @@ class TouchManager {
             return true;
         }
 
-        @Override public boolean onScaleBegin(ScaleGestureDetector detector) {return true;}
-        @Override public void onScaleEnd(ScaleGestureDetector detector) {}
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+        }
     };
 
     private final GestureDetector.OnGestureListener gestureListener = new GestureDetector.SimpleOnGestureListener() {
@@ -122,14 +126,14 @@ class TouchManager {
             velocityX /= 2;
             velocityY /= 2;
 
-            if(Math.abs(velocityX) < MINIMUM_FLING_VELOCITY) {
+            if (Math.abs(velocityX) < MINIMUM_FLING_VELOCITY) {
                 velocityX = 0;
             }
-            if(Math.abs(velocityY) < MINIMUM_FLING_VELOCITY) {
+            if (Math.abs(velocityY) < MINIMUM_FLING_VELOCITY) {
                 velocityY = 0;
             }
 
-            if(velocityX == 0 && velocityY == 0) {
+            if (velocityX == 0 && velocityY == 0) {
                 return true;
             }
 
@@ -161,8 +165,7 @@ class TouchManager {
                 toX = centeredTargetPosition.getX();
                 fromY = position.getY();
                 toY = centeredTargetPosition.getY();
-            }
-            else {
+            } else {
                 targetScale = minimumScale;
                 TouchPoint translatedPosition = mapTouchCoordinateToMatrix(eventPoint, scale);
                 TouchPoint centeredTargetPosition = centerCoordinates(translatedPosition);
@@ -187,7 +190,7 @@ class TouchManager {
         this.imageView = imageView;
         scaleGestureDetector = new ScaleGestureDetector(imageView.getContext(), scaleGestureListener);
         gestureDetector = new GestureDetector(imageView.getContext(), gestureListener);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             scaleGestureDetector.setQuickScaleEnabled(true);
         }
 
@@ -210,6 +213,7 @@ class TouchManager {
     public void applyPositioningAndScale(Matrix matrix) {
         matrix.postTranslate(-bitmapWidth / 2.0f, -bitmapHeight / 2.0f);
         matrix.postScale(scale, scale);
+//        matrix.postScale(1.5f, 1.5f);
         matrix.postTranslate(position.getX(), position.getY());
     }
 
@@ -256,10 +260,9 @@ class TouchManager {
         newX = -(newX - x0);
 
         float newY = coordinate.getY() * targetScale;
-        if(newY > y0) {
+        if (newY > y0) {
             newY = -(newY - y0);
-        }
-        else {
+        } else {
             newY = y0 - newY;
         }
 
@@ -290,6 +293,20 @@ class TouchManager {
         }
 
         position.set(newX, newY);
+    }
+
+    public void zoomToPosition(float toX, float toY, float toScale) {
+
+        gestureAnimator.xAnimator = ValueAnimator.ofFloat(toX, toX);
+        gestureAnimator.yAnimator = ValueAnimator.ofFloat(toY, toY);
+        gestureAnimator.scaleAnimator = ValueAnimator.ofFloat(1.0f, toScale);
+
+        gestureAnimator.xAnimator.addUpdateListener(gestureAnimator.updateListener);
+        gestureAnimator.yAnimator.addUpdateListener(gestureAnimator.updateListener);
+        gestureAnimator.scaleAnimator.addUpdateListener(gestureAnimator.updateListener);
+
+        gestureAnimator.animate(new AccelerateDecelerateInterpolator(), 0, gestureAnimator.scaleAnimator,
+                gestureAnimator.xAnimator, gestureAnimator.yAnimator);
     }
 
     private void setViewport(int bitmapWidth, int bitmapHeight, int availableWidth, int availableHeight) {
@@ -341,16 +358,20 @@ class TouchManager {
         return actionMasked == MotionEvent.ACTION_POINTER_UP || actionMasked == MotionEvent.ACTION_UP;
     }
 
+
     private static class GestureAnimator {
         @IntDef({ANIMATION_X, ANIMATION_Y, ANIMATION_SCALE})
         @Retention(RetentionPolicy.SOURCE)
-        public @interface AnimationType {}
+        public @interface AnimationType {
+        }
+
         public static final int ANIMATION_X = 0;
         public static final int ANIMATION_Y = 1;
         public static final int ANIMATION_SCALE = 2;
 
         interface OnAnimationUpdateListener {
             void onAnimationUpdate(@AnimationType int animationType, float animationValue);
+
             void onAnimationFinished();
         }
 
@@ -371,13 +392,11 @@ class TouchManager {
             public void onAnimationUpdate(ValueAnimator animation) {
                 float val = ((float) animation.getAnimatedValue());
 
-                if(animation == xAnimator) {
+                if (animation == xAnimator) {
                     listener.onAnimationUpdate(ANIMATION_X, val);
-                }
-                else if(animation == yAnimator) {
+                } else if (animation == yAnimator) {
                     listener.onAnimationUpdate(ANIMATION_Y, val);
-                }
-                else if(animation == scaleAnimator) {
+                } else if (animation == scaleAnimator) {
                     listener.onAnimationUpdate(ANIMATION_SCALE, val);
                 }
             }
@@ -386,16 +405,16 @@ class TouchManager {
         private final Animator.AnimatorListener animatorListener = new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                if(xAnimator != null) xAnimator.removeUpdateListener(updateListener);
-                if(yAnimator != null) yAnimator.removeUpdateListener(updateListener);
-                if(scaleAnimator != null) scaleAnimator.removeUpdateListener(updateListener);
+                if (xAnimator != null) xAnimator.removeUpdateListener(updateListener);
+                if (yAnimator != null) yAnimator.removeUpdateListener(updateListener);
+                if (scaleAnimator != null) scaleAnimator.removeUpdateListener(updateListener);
                 animator.removeAllListeners();
                 listener.onAnimationFinished();
             }
         };
 
         public void animateTranslation(float fromX, float toX, float fromY, float toY) {
-            if(animator != null) {
+            if (animator != null) {
                 animator.cancel();
             }
 
@@ -431,7 +450,7 @@ class TouchManager {
             animator.setInterpolator(interpolator);
             animator.addListener(animatorListener);
             AnimatorSet.Builder builder = animator.play(first);
-            for(ValueAnimator valueAnimator : animators) {
+            for (ValueAnimator valueAnimator : animators) {
                 builder.with(valueAnimator);
             }
             animator.start();
